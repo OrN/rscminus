@@ -23,9 +23,7 @@ import rscminus.game.PacketBuilder;
 import rscminus.game.constants.Game;
 import rscminus.game.world.ViewRegion;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.HashMap;
 
 public class Scraper {
@@ -33,6 +31,8 @@ public class Scraper {
     private static HashMap<Integer, Integer> m_wallObjects = new HashMap<Integer, Integer>();
 
     private static final int OBJECT_BLANK = 65536;
+
+    private static int imageCount = 0;
 
     private static boolean objectIDBlacklisted(int id, int x, int y) {
         boolean blacklist = false;
@@ -357,6 +357,28 @@ public class Scraper {
                         }
                     }
                     break;
+                case PacketBuilder.OPCODE_SLEEP_WORD:
+                    byte[] data = new byte[length];
+
+                    for (int i = 0; i < length; i++) {
+                        data[i] = replay.readByte();
+                        System.out.print(String.format("%x", data[i]));
+                    }
+                    System.out.println();
+
+                    try {
+                        data = convertImage(data);
+                        try (FileOutputStream fos = new FileOutputStream("dist/sleepword/sleep" + (imageCount++) + ".bmp")) {
+                            fos.write(saveBitmap(data));
+                            //fos.close(); There is no more need for this line since you had created the instance of "fos" inside the try. And this will automatically close the OutputStream
+                        }
+                    } catch (Exception e) {
+                        //fuck off
+                        e.printStackTrace();
+                    }
+                    System.out.println(String.format("sleepword: %d length: %d", opcode, length));
+                    //replay.skip(length);
+                    break;
                 case PacketBuilder.OPCODE_WALLOBJECT_HANDLER:
                     while (length > 0) {
                         if (replay.readUnsignedByte() == 255) {
@@ -442,8 +464,144 @@ public class Scraper {
         }
     }
 
+    //courtesy of aposbot
+    private static byte[] convertImage(byte[] data) {
+        int var1 = 1;
+        byte var2 = 0;
+        final byte[] var4 = new byte[10200];
+        int var3;
+        int var5;
+        int var6;
+        for (var3 = 0; var3 < 255; var2 = (byte) (255 - var2)) {
+            var5 = data[var1++] & 255;
+            for (var6 = 0; var6 < var5; ++var6) {
+                var4[var3++] = var2;
+            }
+        }
+        for (var5 = 1; var5 < 40; ++var5) {
+            var6 = 0;
+            while (var6 < 255) {
+                if (var1++ >= data.length - 1)
+                    break;
+
+                final int var7 = data[var1] & 255;
+                for (int var8 = 0; var8 < var7; ++var8) {
+                    var4[var3] = var4[var3 - 255];
+                    ++var3;
+                    ++var6;
+                }
+                if (var6 < 255) {
+                    var4[var3] = (byte) (255 - var4[var3 - 255]);
+                    ++var3;
+                    ++var6;
+                }
+            }
+        }
+        return var4;
+    }
+
+    private static byte[] saveBitmap(byte[] data) throws IOException {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream(4096);
+        out.write(66);
+        out.write(77);
+        short var3 = 1342;
+        out.write(var3 & 255);
+        out.write(var3 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        byte var10 = 62;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 40;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var3 = 256;
+        out.write(var3 & 255);
+        out.write(var3 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 40;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 1;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        var10 = 1;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        var10 = 0;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 0;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 0;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 0;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 0;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        var10 = 0;
+        out.write(var10 & 255);
+        out.write(var10 >> 8 & 255);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        out.write(0);
+        out.write(255);
+        out.write(255);
+        out.write(255);
+        out.write(0);
+        int var4 = 9945;
+        for (int var5 = 0; var5 < 40; ++var5) {
+            for (int var6 = 0; var6 < 32; ++var6) {
+                byte var7 = 0;
+                for (int var8 = 0; var8 < 8; ++var8) {
+                    var7 = (byte) (2 * var7);
+                    if (var6 != 31 || var8 != 7) {
+                        if (data[var4] != 0) {
+                            ++var7;
+                        }
+                        ++var4;
+                    }
+                }
+                out.write(var7);
+            }
+            var4 -= 510;
+        }
+        out.close();
+        return out.toByteArray();
+    }
+
     public static void main(String args[]) {
-        scrapeDirectory("C:\\Users\\xtraf\\Downloads\\Warrior\\RSC-Plus-Replays-master");
+        scrapeDirectory("/home/tyler/code/mine/rscp/RSC-Plus-Replays-hubcapp");
+        //scrapeReplay("/home/tyler/code/mine/rscp/RSC-Plus-Replays-hubcapp/RSC 2001/replays master archive/Stat effects/Fatigue/fatigue- use sleeping bag");
+        //scrapeReplay("/home/tyler/code/mine/rscp/RSC-Plus-Replays-hubcapp/RSC 2001/replays master archive/Stat effects/Fatigue/fatigue- 100 % - sleep to mid- sleep to 0%");
         //scrapeReplay("C:\\Users\\xtraf\\Downloads\\Warrior\\RSC-Plus-Replays-master\\Logg\\Tylerbeg\\07-24-2018 23.17.54 agility, fatigued messages");
         //scrapeReplay("C:\\Users\\xtraf\\Downloads\\Warrior\\RSC-Plus-Replays-master\\Logg\\Tylerbeg\\07-18-2018 08.28.02 logging in to screenshot stats");
         //scrapeReplay("C:\\Users\\xtraf\\Downloads\\Warrior\\RSC-Plus-Replays-master\\Logg\\Tylerbeg\\07-26-2018 22.21.04 6 minutes of nothing");

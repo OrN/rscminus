@@ -39,6 +39,7 @@ public class PacketBuilder {
     public static final int OPCODE_GROUNDITEM_HANDLER = 99;
     public static final int OPCODE_SKIP_TUTORIAL = 111;
     public static final int OPCODE_SET_FATIGUE = 114;
+    public static final int OPCODE_SLEEP_WORD = 117;
     public static final int OPCODE_REMOVE_INVENTORY_SLOT = 123;
     public static final int OPCODE_SEND_MESSAGE = 131;
     public static final int OPCODE_SET_EQUIP_STATS = 153;
