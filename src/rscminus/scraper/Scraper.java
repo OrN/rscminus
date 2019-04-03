@@ -62,7 +62,7 @@ public class Scraper {
             blacklist = true;
 
         if (blacklist) {
-            //System.out.println("GameObject id " + id + " at " + x + ", " + y + " was blacklisted");
+            System.out.println("GameObject id " + id + " at " + x + ", " + y + " was blacklisted");
         }
         return blacklist;
     }
@@ -74,7 +74,7 @@ public class Scraper {
             remove = true;
 
         if (remove) {
-            //System.out.println("GameObject id " + id + " at " + x + ", " + y + " was removed");
+            System.out.println("GameObject id " + id + " at " + x + ", " + y + " was removed");
         }
         return remove;
     }
@@ -110,7 +110,7 @@ public class Scraper {
         else if (before == 314)
             return after;
 
-        //System.out.println("unhandled GameObject conflict; before: " + before + ", after: " + after);
+        System.out.println("unhandled GameObject conflict; before: " + before + ", after: " + after);
 
         return before;
     }
@@ -172,7 +172,7 @@ public class Scraper {
         else if (afterID == 11)
             return packCoordinate(beforeID, beforeDirection);
 
-        //System.out.println("unhandled WallObject conflict; before: " + beforeID + ", after: " + afterID);
+        System.out.println("unhandled WallObject conflict; before: " + beforeID + ", after: " + afterID);
 
         return before;
     }
@@ -272,7 +272,7 @@ public class Scraper {
         Replay replay = new Replay();
         replay.load(fname);
 
-        //System.out.println(fname);
+        System.out.println(fname);
 
         if (!replay.isValid()) {
             System.out.println("Failed to load replay " + fname + "; Aborting");
@@ -335,21 +335,21 @@ public class Scraper {
                             length -= 4;
 
                             if (!loggedIn || planeX != Game.WORLD_PLANE_X || planeY != Game.WORLD_PLANE_Y || y_offset != Game.WORLD_Y_OFFSET || floor > 3 || floor < 0) {
-                                //System.out.println("Invalid region or not logged in; Aborting");
+                                System.out.println("Invalid region or not logged in; Aborting");
                                 return;
                             }
 
                             if (!validCoordinates(x, y)) {
-                                //System.out.println("Invalid coordinates " + x + ", " + y + "; Aborting");
+                                System.out.println("Invalid coordinates " + x + ", " + y + "; Aborting");
                                 return;
                             } else if (type != 60000 && !objectIDBlacklisted(type, x, y)) {
                                 if (type < 0 || type > 1188) {
-                                    //System.out.println("GameObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
+                                    System.out.println("GameObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
                                     return;
                                 }
 
                                 int key = packCoordinate(x, y);
-                                //System.out.println("x: " + x + ", y: " + y);
+                                System.out.println("x: " + x + ", y: " + y);
                                 if (objects.containsKey(key))
                                     type = handleObjectIDConflict(objects.get(key), type);
                                 objects.put(key, type);
@@ -363,9 +363,9 @@ public class Scraper {
 
                         for (int i = 0; i < length; i++) {
                             data[i] = replay.readByte();
-                            //System.out.print(String.format("%x", data[i]));
+                            System.out.print(String.format("%x", data[i]));
                         }
-                        //System.out.println();
+                        System.out.println();
 
                         try {
                             data = convertImage(data);
@@ -376,7 +376,7 @@ public class Scraper {
                             //never happens btw
                             e.printStackTrace();
                         }
-                        //System.out.println(String.format("sleepword: %d length: %d", opcode, length));
+                        System.out.println(String.format("sleepword: %d length: %d", opcode, length));
                         //replay.skip(length);
                     } else {
                         System.out.println("Zero length packet 117 in " + fname);
