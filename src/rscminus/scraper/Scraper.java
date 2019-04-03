@@ -61,9 +61,9 @@ public class Scraper {
         else if (id == 1077) // Leak
             blacklist = true;
 
-        if (blacklist)
-            System.out.println("GameObject id " + id + " at " + x + ", " + y + " was blacklisted");
-
+        if (blacklist) {
+            //System.out.println("GameObject id " + id + " at " + x + ", " + y + " was blacklisted");
+        }
         return blacklist;
     }
 
@@ -73,9 +73,9 @@ public class Scraper {
         if (id == 97) // fire
             remove = true;
 
-        if (remove)
-            System.out.println("GameObject id " + id + " at " + x + ", " + y + " was removed");
-
+        if (remove) {
+            //System.out.println("GameObject id " + id + " at " + x + ", " + y + " was removed");
+        }
         return remove;
     }
 
@@ -110,7 +110,7 @@ public class Scraper {
         else if (before == 314)
             return after;
 
-        System.out.println("unhandled GameObject conflict; before: " + before + ", after: " + after);
+        //System.out.println("unhandled GameObject conflict; before: " + before + ", after: " + after);
 
         return before;
     }
@@ -172,7 +172,7 @@ public class Scraper {
         else if (afterID == 11)
             return packCoordinate(beforeID, beforeDirection);
 
-        System.out.println("unhandled WallObject conflict; before: " + beforeID + ", after: " + afterID);
+        //System.out.println("unhandled WallObject conflict; before: " + beforeID + ", after: " + afterID);
 
         return before;
     }
@@ -272,10 +272,10 @@ public class Scraper {
         Replay replay = new Replay();
         replay.load(fname);
 
-        System.out.println(fname);
+        //System.out.println(fname);
 
         if (!replay.isValid()) {
-            System.out.println("Failed to load replay; Aborting");
+            System.out.println("Failed to load replay " + fname + "; Aborting");
             return;
         }
 
@@ -335,16 +335,16 @@ public class Scraper {
                             length -= 4;
 
                             if (!loggedIn || planeX != Game.WORLD_PLANE_X || planeY != Game.WORLD_PLANE_Y || y_offset != Game.WORLD_Y_OFFSET || floor > 3 || floor < 0) {
-                                System.out.println("Invalid region or not logged in; Aborting");
+                                //System.out.println("Invalid region or not logged in; Aborting");
                                 return;
                             }
 
                             if (!validCoordinates(x, y)) {
-                                System.out.println("Invalid coordinates " + x + ", " + y + "; Aborting");
+                                //System.out.println("Invalid coordinates " + x + ", " + y + "; Aborting");
                                 return;
                             } else if (type != 60000 && !objectIDBlacklisted(type, x, y)) {
                                 if (type < 0 || type > 1188) {
-                                    System.out.println("GameObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
+                                    //System.out.println("GameObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
                                     return;
                                 }
 
@@ -358,26 +358,29 @@ public class Scraper {
                     }
                     break;
                 case PacketBuilder.OPCODE_SLEEP_WORD:
-                    byte[] data = new byte[length];
+                    if (length > 0) {
+                        byte[] data = new byte[length];
 
-                    for (int i = 0; i < length; i++) {
-                        data[i] = replay.readByte();
-                        System.out.print(String.format("%x", data[i]));
-                    }
-                    System.out.println();
-
-                    try {
-                        data = convertImage(data);
-                        try (FileOutputStream fos = new FileOutputStream("dist/sleepword/sleep" + (imageCount++) + ".bmp")) {
-                            fos.write(saveBitmap(data));
-                            //fos.close(); There is no more need for this line since you had created the instance of "fos" inside the try. And this will automatically close the OutputStream
+                        for (int i = 0; i < length; i++) {
+                            data[i] = replay.readByte();
+                            //System.out.print(String.format("%x", data[i]));
                         }
-                    } catch (Exception e) {
-                        //fuck off
-                        e.printStackTrace();
+                        //System.out.println();
+
+                        try {
+                            data = convertImage(data);
+                            try (FileOutputStream fos = new FileOutputStream("dist/sleepword/sleep" + (imageCount++) + ".bmp")) {
+                                fos.write(saveBitmap(data));
+                            }
+                        } catch (Exception e) {
+                            //never happens btw
+                            e.printStackTrace();
+                        }
+                        //System.out.println(String.format("sleepword: %d length: %d", opcode, length));
+                        //replay.skip(length);
+                    } else {
+                        System.out.println("Zero length packet 117 in " + fname);
                     }
-                    System.out.println(String.format("sleepword: %d length: %d", opcode, length));
-                    //replay.skip(length);
                     break;
                 case PacketBuilder.OPCODE_WALLOBJECT_HANDLER:
                     while (length > 0) {
@@ -464,7 +467,8 @@ public class Scraper {
         }
     }
 
-    //courtesy of aposbot
+    //convertImage & saveBitmap are mostly courtesy of aposbot, altered a little
+    //used for opcode 117, sleepwords
     private static byte[] convertImage(byte[] data) {
         int var1 = 1;
         byte var2 = 0;
@@ -499,7 +503,6 @@ public class Scraper {
         }
         return var4;
     }
-
     private static byte[] saveBitmap(byte[] data) throws IOException {
         final ByteArrayOutputStream out = new ByteArrayOutputStream(4096);
         out.write(66);
@@ -608,8 +611,8 @@ public class Scraper {
         //scrapeReplay("C:\\Users\\xtraf\\Documents\\GitHub\\RSC-Plus-Replays-master\\RSC 2001\\LAST 2 DAYS REPLAYS (ACCOUNT 1)\\08-06-2018 05.01.43");
         //scrapeReplay("C:\\Users\\xtraf\\Documents\\GitHub\\RSC-Plus-Replays-master\\RSC 2001\\LAST 2 DAYS REPLAYS (ACCOUNT 1)\\flying sno train - 08-05-2018 22.55.55");
         //scrapeReplay("C:\\Users\\xtraf\\Downloads\\Warrior\\RSC-Plus-Replays-master\\Logg\\Tylerbeg\\07-19-2018 10.15.33 more underground pass");
-        dumpObjects("objects.bin");
-        dumpWallObjects("wallobjects.bin");
+        //dumpObjects("objects.bin");
+        //dumpWallObjects("wallobjects.bin");
 
         return;
     }
