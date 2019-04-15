@@ -34,4 +34,16 @@ public class FileUtil {
             return null;
         }
     }
+
+    public static String findDirectoryReverse(String name) {
+        String ret = Settings.Dir.JAR;
+
+        for (int i = 0; i < 8; i++) {
+            File file = new File(ret + name);
+            if (file.exists() && file.isDirectory()) return ret;
+            ret += "/..";
+        }
+
+        return Settings.Dir.JAR;
+    }
 }

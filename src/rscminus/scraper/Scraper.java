@@ -20,6 +20,8 @@
 package rscminus.scraper;
 
 import rscminus.common.FileUtil;
+import rscminus.common.Logger;
+import rscminus.common.Settings;
 import rscminus.game.PacketBuilder;
 import rscminus.game.constants.Game;
 import rscminus.game.world.ViewRegion;
@@ -29,6 +31,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
+
+import static rscminus.common.Settings.initDir;
 
 public class Scraper {
     private static HashMap<Integer, Integer> m_objects = new HashMap<Integer, Integer>();
@@ -71,7 +75,7 @@ public class Scraper {
             blacklist = true;
 
         if (blacklist)
-            System.out.println("GameObject id " + id + " at " + x + ", " + y + " was blacklisted");
+            Logger.Debug("GameObject id " + id + " at " + x + ", " + y + " was blacklisted");
 
         return blacklist;
     }
@@ -83,7 +87,7 @@ public class Scraper {
             remove = true;
 
         if (remove)
-            System.out.println("GameObject id " + id + " at " + x + ", " + y + " was removed");
+            Logger.Debug("GameObject id " + id + " at " + x + ", " + y + " was removed");
 
         return remove;
     }
@@ -92,7 +96,7 @@ public class Scraper {
         boolean blacklist = false;
 
         if (blacklist)
-            System.out.println("WallObject id " + id + " at " + x + ", " + y + " was blacklisted");
+            Logger.Debug("WallObject id " + id + " at " + x + ", " + y + " was blacklisted");
 
         return blacklist;
     }
@@ -119,7 +123,7 @@ public class Scraper {
         else if (before == 314)
             return after;
 
-        System.out.println("unhandled GameObject conflict; before: " + before + ", after: " + after);
+        Logger.Warn("unhandled GameObject conflict; before: " + before + ", after: " + after);
 
         return before;
     }
@@ -181,7 +185,7 @@ public class Scraper {
         else if (afterID == 11)
             return packCoordinate(beforeID, beforeDirection);
 
-        System.out.println("unhandled WallObject conflict; before: " + beforeID + ", after: " + afterID);
+        Logger.Warn("unhandled WallObject conflict; before: " + beforeID + ", after: " + afterID);
 
         return before;
     }
@@ -206,7 +210,7 @@ public class Scraper {
                 }
             }
             out.close();
-            System.out.println("Dumped " + objectCount + " objects");
+            Logger.Info("Dumped " + objectCount + " objects");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -228,7 +232,7 @@ public class Scraper {
                 out.writeByte(direction);
             }
             out.close();
-            System.out.println("Dumped " + count + " wall objects");
+            Logger.Info("Dumped " + count + " wall objects");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -281,7 +285,7 @@ public class Scraper {
         ReplayEditor editor = new ReplayEditor();
         editor.importData(fname);
 
-        System.out.println(fname);
+        Logger.Info(fname);
 
         // Process incoming packets
         LinkedList<ReplayPacket> incomingPackets = editor.getIncomingPackets();
@@ -393,10 +397,10 @@ public class Scraper {
         Replay replay = new Replay();
         replay.load(fname);
 
-        System.out.println(fname);
+        Logger.Info(fname);
 
         if (!replay.isValid()) {
-            System.out.println("Failed to load replay; Aborting");
+            Logger.Info("Failed to load replay; Aborting");
             return;
         }
 
@@ -456,16 +460,16 @@ public class Scraper {
                             length -= 4;
 
                             if (!loggedIn || planeX != Game.WORLD_PLANE_X || planeY != Game.WORLD_PLANE_Y || y_offset != Game.WORLD_Y_OFFSET || floor > 3 || floor < 0) {
-                                System.out.println("Invalid region or not logged in; Aborting");
+                                Logger.Warn("Invalid region or not logged in; Aborting");
                                 return;
                             }
 
                             if (!validCoordinates(x, y)) {
-                                System.out.println("Invalid coordinates " + x + ", " + y + "; Aborting");
+                                Logger.Warn("Invalid coordinates " + x + ", " + y + "; Aborting");
                                 return;
                             } else if (type != 60000 && !objectIDBlacklisted(type, x, y)) {
                                 if (type < 0 || type > 1188) {
-                                    System.out.println("GameObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
+                                    Logger.Warn("GameObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
                                     return;
                                 }
 
@@ -492,16 +496,16 @@ public class Scraper {
                             length -= 5;
 
                             if (!loggedIn || planeX != Game.WORLD_PLANE_X || planeY != Game.WORLD_PLANE_Y || y_offset != Game.WORLD_Y_OFFSET || floor > 3 || floor < 0) {
-                                System.out.println("Invalid region or not logged in; Aborting");
+                                Logger.Warn("Invalid region or not logged in; Aborting");
                                 return;
                             }
 
                             if (!validCoordinates(x, y)) {
-                                System.out.println("Invalid coordinates " + x + ", " + y + "; Aborting");
+                                Logger.Warn("Invalid coordinates " + x + ", " + y + "; Aborting");
                                 return;
                             } else if (type != 0xFFFF && !wallObjectIDBlacklisted(type, x, y)) {
                                 if (type < 0 || type > 213) {
-                                    System.out.println("WallObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
+                                    Logger.Warn("WallObject id " + type + " at " + x + ", " + y + " is invalid; Aborting");
                                     return;
                                 }
 
@@ -579,6 +583,12 @@ public class Scraper {
     }
 
     public static void main(String args[]) {
+        initDir();
+        Logger.Debug("Dir.JAR: " + Settings.Dir.JAR);
+
+        Logger.Info("cool shit my dude");
+
+        /*
         sanitizePath = new File(sanitizePath).toPath().toAbsolutePath().toString();
         sanitizeOutputPath = new File(sanitizeOutputPath).toPath().toAbsolutePath().toString();
         FileUtil.mkdir(sanitizePath);
@@ -589,6 +599,7 @@ public class Scraper {
         sanitizePrivateChat = true;
         sanitizeFriendsIgnore = true;
         sanitizeDirectory(sanitizePath);
+        */
 
         // Scrape directory
         //scrapeDirectory(sanitizePath);

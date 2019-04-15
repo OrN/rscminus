@@ -23,7 +23,7 @@ package rscminus.common;
 import java.net.URL;
 
 public class Settings {
-  public static int LOG_VERBOSITY = 0;
+  public static int LOG_VERBOSITY = 10;
   public static boolean COLORIZE_CONSOLE_TEXT = true;
   public static boolean LOG_FORCE_LEVEL = true;
   public static boolean LOG_SHOW_LEVEL = true;
@@ -56,10 +56,9 @@ public class Settings {
 
     // Try finding assets
     try {
-      url = new URL("file://" + Dir.JAR + fileName);
+      url = new URL("file://" + FileUtil.findDirectoryReverse("/assets") + fileName);
     } catch (Exception e) {
     }
-    Logger.Debug("Dir.JAR: " + Dir.JAR);
     Logger.Info("Loading resource: " + fileName);
 
     return url;
