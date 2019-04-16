@@ -158,12 +158,12 @@ public class StripperWindow {
     JScrollPane aboutScrollPane = new JScrollPane();
     JScrollPane scrapeScrollPane = new JScrollPane();
     JScrollPane stripScrollPane = new JScrollPane();
-    JScrollPane donateScrollPane = new JScrollPane();
+    JScrollPane contributeScrollPane = new JScrollPane();
 
     JPanel aboutPanel = new JPanel();
     JPanel scrapePanel = new JPanel();
     JPanel stripPanel = new JPanel();
-    JPanel donatePanel = new JPanel();
+    JPanel contributePanel = new JPanel();
 
 
     frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
@@ -172,26 +172,26 @@ public class StripperWindow {
     tabbedPane.addTab("Scrape", null, scrapeScrollPane, null);
     tabbedPane.addTab("Strip", null, stripScrollPane, null);
 
-    // TODO: ornox uncomment this, maybe add some way to donate in the gui
+    // TODO: maybe add some way to donate in the gui
     // TODO: possibly user configurable in settings if this tab gets added or not, on by default
-    //tabbedPane.addTab("Contribute ♥", null, donateScrollPane, null);
+    tabbedPane.addTab("♥ Contribute", null, contributeScrollPane, null);
 
 
     aboutScrollPane.setViewportView(aboutPanel);
     scrapeScrollPane.setViewportView(scrapePanel);
     stripScrollPane.setViewportView(stripPanel);
-    donateScrollPane.setViewportView(donatePanel);
+    contributeScrollPane.setViewportView(contributePanel);
 
     // Adding padding for aesthetics
     aboutPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     scrapePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     stripPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    donatePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    contributePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
     setScrollSpeed(aboutScrollPane,  20, 15);
     setScrollSpeed(scrapeScrollPane, 20, 15);
     setScrollSpeed(stripScrollPane,  20, 15);
-    setScrollSpeed(donateScrollPane, 20, 15);
+    setScrollSpeed(contributeScrollPane, 20, 15);
 
 
     /*
@@ -371,7 +371,7 @@ public class StripperWindow {
             }
     );
 
-    JCheckBox stripPrivateFriendsUpdateCheckbox =  addCheckbox("Delete Friends/Ignore Lists and Log In/Out Messages",stripPanelCheckboxesPanel);
+    JCheckBox stripPrivateFriendsUpdateCheckbox =  addCheckbox("Delete Friends/Ignore Lists and Log In/Out Messages (only use if necessary, deletes World Logged Into)",stripPanelCheckboxesPanel);
     stripPrivateFriendsUpdateCheckbox.setSelected(Settings.sanitizeFriendsIgnore);
     stripPrivateFriendsUpdateCheckbox.addActionListener(
             new ActionListener() {
@@ -415,12 +415,44 @@ public class StripperWindow {
 
 
     /*
-     * Donate tab
+     * Contribute tab
      */
-    donatePanel.setLayout(new BoxLayout(donatePanel, BoxLayout.Y_AXIS));
-    addSettingsHeader(donatePanel, "How to donate"); //pm ornox ;)
+    contributePanel.setLayout(new BoxLayout(contributePanel, BoxLayout.Y_AXIS));
+    addSettingsHeader(contributePanel, "How to Contribute"); //pm ornox ;)
 
+    JPanel howToContributePanel = new JPanel();
+    howToContributePanel.setLayout(new BoxLayout(howToContributePanel, BoxLayout.Y_AXIS));
+    howToContributePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+    JPanel rscMinusLinkPanel = new JPanel();
+    rscMinusLinkPanel.setLayout(new BoxLayout(rscMinusLinkPanel, BoxLayout.Y_AXIS));
+    rscMinusLinkPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    JTextField RSCMinusLink = new JTextField();
+    RSCMinusLink.setMinimumSize(new Dimension(100, 28));
+    RSCMinusLink.setMaximumSize(new Dimension(250, 28));
+    RSCMinusLink.setAlignmentY((float) 0.75);
+
+    JLabel contributeSpeech1 = new JLabel(
+            "<html>There are two ways to contribute.<br/>" +
+                    "<h3>1. Contribute source code yourself</h3>" +
+                    "The source code for RSCMinus can be found here:</html>"
+    );
+    RSCMinusLink.setText("https://github.com/OrN/rscminus"); //easier than doing a proper link
+    JLabel contributeSpeech2 = new JLabel(
+            "<html>You can also report bugs and file feature requests at that address.<br/>" +
+                    "<h3>2. Contact ornox#3047 on Discord for a quote ($$$)</h3>" +
+                    "Ornox is highly qualified to implement any feature you want related to RSC.<br/>" +
+                    "Whether it's scraping additional content from replays in RSCMinus, or working<br/>" +
+                    "on the server component of RSCMinus, or really anything, even outside RSCMinus.<br/>" +
+                    "However, he retired from RSC in December of 2018, and now only works on RSC if contracted.<br/>" +
+                    "He works quickly and always gets things done right, so if you want progress, hit him up."
+    );
+
+    howToContributePanel.add(contributeSpeech1);
+    rscMinusLinkPanel.add(RSCMinusLink);
+    howToContributePanel.add(rscMinusLinkPanel);
+    howToContributePanel.add(contributeSpeech2);
+    contributePanel.add(howToContributePanel);
   }
 
   private void scrapeButtonAction(JTextField replayDirectoryTextField) {

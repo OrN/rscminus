@@ -617,9 +617,16 @@ public class Scraper {
     }
 
     public static void strip() {
+        if (new File(sanitizePath).getName().equals("Processing!")) {
+            Logger.Warn("@|red Cannot strip from folder named \"Processing!\".|@");
+            Logger.Info("@|red Hit CTRL-V to paste into the text field.|@");
+            return;
+        }
+
         stripping = true;
         sanitizePath = new File(sanitizePath).toPath().toAbsolutePath().toString();
         sanitizeOutputPath = Settings.Dir.JAR + "/strippedReplays";
+
         Logger.Info("Saving to " + sanitizeOutputPath);
         FileUtil.mkdir(sanitizePath);
 
