@@ -19,7 +19,6 @@
 
 package rscminus.common;
 
-
 import java.net.URL;
 
 public class Settings {
@@ -70,6 +69,13 @@ public class Settings {
 
   public static URL getResource(String fileName) { // TODO: Consider moving to a more relevant place
     URL url = null;
+    try {
+      url = Settings.class.getResource(fileName);
+      return url;
+    } catch (Exception e) {
+      Logger.Debug("Couldn't load resource from jar " + fileName);
+      e.printStackTrace();
+    }
 
     // Try finding assets
     try {

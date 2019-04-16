@@ -133,9 +133,9 @@ public class StripperWindow {
 
     // TODO: maybe add some way to donate in the gui
     // TODO: possibly user configurable in settings if this tab gets added or not, on by default
-    tabbedPane.addTab("♥ Contribute", null, contributeScrollPane, null);
-
-
+    tabbedPane.addTab("Contribute", null, contributeScrollPane, null);
+    tabbedPane.setIconAt(3, new ImageIcon(Settings.getResource("/assets/contribute.png")));
+    
     aboutScrollPane.setViewportView(aboutPanel);
     scrapeScrollPane.setViewportView(scrapePanel);
     stripScrollPane.setViewportView(stripPanel);
@@ -166,7 +166,7 @@ public class StripperWindow {
 
     JPanel logoPanel = new JPanel();
     try {
-      BufferedImage rscminusLogo = ImageIO.read(new File(FileUtil.findDirectoryReverse("/assets") + "/assets/rscminus-logo.png"));
+      BufferedImage rscminusLogo = ImageIO.read(Settings.getResource("/assets/rscminus-logo.png"));
       JLabel rscminusLogoJLabel = new JLabel(new ImageIcon(rscminusLogo.getScaledInstance(256, 256, Image.SCALE_SMOOTH)));
       rscminusLogoJLabel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
       logoPanel.add(rscminusLogoJLabel);
@@ -233,7 +233,6 @@ public class StripperWindow {
     thirdsPanel.add(bottomPane, c);
 
     aboutPanel.add(thirdsPanel);
-
 
     /*
      * Scrape tab
@@ -370,7 +369,6 @@ public class StripperWindow {
 
     //TODO add jlabel "OR" here
     //TODO add file chooser here
-
 
     /*
      * Contribute tab
