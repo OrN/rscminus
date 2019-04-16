@@ -26,58 +26,17 @@ import rscminus.common.Settings;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
-/**
- * GUI designed for the RSCPlus client that manages Stripperuration options and keybind values from
- * within an interface.
- *
- * <p><b>To add a new Stripperuration option to the GUI,</b> <br>
- * 1.) Declare an instance variable to hold the gui element (eg checkbox) and add it to the GUI from
- * StripperWindow.initialize() (see existing examples) <br>
- * 1.5.) If there is a helper method such as addCheckbox, use that method to create and store the
- * element that is returned in the StripperWindow.initialize() method. See existing code for examples.
- * <br>
- * 2.) ^Add an appropriate variable to the Settings class as a class variable, <i>and</i> as an
- * assignment in the appropriate restore default method below. <br>
- * 3.) Add an entry in the StripperWindow.synchronizeGuiValues() method that references the variable,
- * as per the already-existing examples.<br>
- * 4.) Add an entry in the StripperWindow.saveSettings() method referencing the variable, as per the
- * already-existing examples.<br>
- * 5.) ^Add an entry in the Settings.Save() class save method to save the option to file.<br>
- * 6.) ^Add an entry in the Settings.Load() class load method to load the option from file.<br>
- * 7.) (Optional) If a method needs to be called to adjust settings other than the setting value
- * itself, add it to the StripperWindow.applySettings() method below.<br>
- * <br>
- * <i>Entries marked with a ^ are steps used to add settings that are not included in the GUI.</i>
- * <br>
- * <br>
- * <b>To add a new keybind,</b><br>
- * 1.) Add a call in the initialize method to addKeybind with appropriate parameters.<br>
- * 2.) Add an entry to the command switch statement in Settings to process the command when its
- * keybind is pressed.<br>
- * 3.) Optional, recommended: Separate the command from its functionality by making a toggleBlah
- * method and calling it from the switch statement.<br>
- */
 public class StripperWindow {
 
   private JFrame frame;
@@ -406,12 +365,10 @@ public class StripperWindow {
             );
 
     stripPanel.add(stripPanelCheckboxesPanel);
-
     //TODO put "start" button inline, to the right of the text field
 
     //TODO add jlabel "OR" here
     //TODO add file chooser here
-
 
 
     /*
