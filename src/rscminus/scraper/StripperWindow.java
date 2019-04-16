@@ -329,7 +329,7 @@ public class StripperWindow {
               }
             }
     );
-
+    /* Removed until we can figure out a way to save the important "what world are we logged into" data from it
     JCheckBox stripPrivateFriendsUpdateCheckbox =  addCheckbox("Delete Friends/Ignore Lists and Log In/Out Messages (only use if necessary, deletes World Logged Into)",stripPanelCheckboxesPanel);
     stripPrivateFriendsUpdateCheckbox.setSelected(Settings.sanitizeFriendsIgnore);
     stripPrivateFriendsUpdateCheckbox.addActionListener(
@@ -340,6 +340,7 @@ public class StripperWindow {
               }
             }
     );
+    */
 
     explainWhatTheTextBoxIsFor = new JLabel("Paste the top directory for the replay(s) you want to optimize or strip data from: (CTRL-V)");
     stripPanelCheckboxesPanel.add(explainWhatTheTextBoxIsFor);
