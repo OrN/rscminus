@@ -20,6 +20,10 @@
 package rscminus.common;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 
 public class FileUtil {
@@ -46,4 +50,21 @@ public class FileUtil {
 
         return Settings.Dir.JAR;
     }
+
+    public static void copyFile(File source, File dest) throws IOException {
+        if (source.getAbsolutePath().equals(dest.getAbsolutePath())) {
+            return;
+        }
+        FileChannel sourceChannel = null;
+        FileChannel destChannel = null;
+        try {
+            sourceChannel = new FileInputStream(source).getChannel();
+            destChannel = new FileOutputStream(dest).getChannel();
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        }finally{
+            sourceChannel.close();
+            destChannel.close();
+        }
+    }
+
 }

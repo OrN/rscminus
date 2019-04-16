@@ -285,7 +285,7 @@ public class Scraper {
         ReplayEditor editor = new ReplayEditor();
         editor.importData(fname);
 
-        Logger.Info(fname);
+        Logger.Debug(fname);
 
         // Process incoming packets
         LinkedList<ReplayPacket> incomingPackets = editor.getIncomingPackets();
@@ -390,7 +390,7 @@ public class Scraper {
         String outDir = fname.replaceFirst(sanitizePath, sanitizeOutputPath);
         outDir = new File(outDir).toPath().toAbsolutePath().toString();
         FileUtil.mkdir(outDir);
-        editor.exportData(outDir);
+        editor.exportData(outDir,fname);
     }
 
     private static void scrapeReplay(String fname) {
@@ -559,10 +559,13 @@ public class Scraper {
             if (f.isDirectory()) {
                 String replayDirectory = f.getAbsolutePath();
                 File replay = new File(replayDirectory + "/in.bin.gz");
-                if (replay.exists())
+                if (replay.exists()) {
+                    Logger.Info("@|cyan Started sanitizing |@" + replayDirectory);
                     sanitizeReplay(replayDirectory);
-                else
+                    Logger.Info("@|cyan,intensity_bold Finished sanitizing |@" + replayDirectory);
+                } else {
                     sanitizeDirectory(replayDirectory);
+                }
             }
         }
     }
@@ -601,7 +604,7 @@ public class Scraper {
             else
                 scrapeDirectory(sanitizePath);
         } else {
-            Logger.Warn("You attempted to scrape nothing. Make sure to select something to scrape.");
+            Logger.Warn("@|red You attempted to scrape nothing. Make sure to select something to scrape.|@");
         }
         if (Settings.dumpObjects) {
             dumpObjects(Settings.Dir.JAR + "/objects.bin");
@@ -609,7 +612,7 @@ public class Scraper {
         if (Settings.dumpWallObjects) {
             dumpWallObjects(Settings.Dir.JAR + "/wallobjects.bin");
         }
-        Logger.Info("Finished Scraping!");
+        Logger.Info("@|green,intensity_bold Finished Scraping!|@");
         scraping = false;
     }
 
@@ -629,7 +632,7 @@ public class Scraper {
             FileUtil.mkdir(sanitizeOutputPath);
             sanitizeDirectory(sanitizePath);
         }
-        Logger.Info("Finished Stripping/Optimizing!");
+        Logger.Info("@|green,intensity_bold Finished Stripping/Optimizing!|@");
         stripping = false;
     }
 

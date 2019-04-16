@@ -27,7 +27,7 @@ public class Settings {
   public static String versionNumber = "0.0.7";
 
   // Logger Settings
-  public static int LOG_VERBOSITY = 10;
+  public static int LOG_VERBOSITY = 3;
   public static boolean COLORIZE_CONSOLE_TEXT = true;
   public static boolean LOG_FORCE_LEVEL = true;
   public static boolean LOG_SHOW_LEVEL = true;

@@ -37,6 +37,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -81,20 +83,6 @@ public class StripperWindow {
   private JFrame frame;
 
   JTabbedPane tabbedPane;
-
-  //// General tab
-
-
-  //// Overlays tab
-
-
-  //// Notifications tab
-
-
-  //// Replay tab
-
-
-  //// Presets tab
 
 
   public StripperWindow() {
@@ -153,6 +141,8 @@ public class StripperWindow {
 
   private void runInit() {
     frame = new JFrame();
+
+    ExecutorService executor = Executors.newFixedThreadPool(3);
     frame.setTitle("RSCMinus");
     frame.setBounds(100, 100, 800, 650);
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -336,16 +326,7 @@ public class StripperWindow {
                 new ActionListener() {
                   @Override
                   public void actionPerformed(ActionEvent e) {
-                    Settings.sanitizePath = replayDirectoryTextField.getText();
-                    Settings.sanitizeOutputPath = new File(Settings.sanitizePath, "../output").toString();
-                    if (replayDirectoryTextField.getText().length() > 0) {
-                      if (!Scraper.stripping) {
-                        Logger.Info("Scraping " + Settings.sanitizePath);
-                        Scraper.scrape();
-                      } else {
-                        Logger.Warn("Already scraping, please wait.");
-                      }
-                    }
+                    executor.submit(() -> scrapeButtonAction(replayDirectoryTextField));
                   }
                 }
             );
@@ -419,16 +400,7 @@ public class StripperWindow {
                     new ActionListener() {
                       @Override
                       public void actionPerformed(ActionEvent e) {
-                        Settings.sanitizePath = replayDirectoryTextField2.getText();
-                        Settings.sanitizeOutputPath = new File(Settings.sanitizePath,"../output").toString();
-                        if (replayDirectoryTextField2.getText().length() > 0) {
-                          if (!Scraper.stripping) {
-                            Logger.Info("Stripping/Optimizing " + Settings.sanitizePath);
-                            Scraper.strip();
-                          } else {
-                            Logger.Warn("Already stripping/optimizing, please wait.");
-                          }
-                        }
+                          executor.submit(() -> stripButtonAction(replayDirectoryTextField2));
                       }
                     }
             );
@@ -449,6 +421,34 @@ public class StripperWindow {
     addSettingsHeader(donatePanel, "How to donate"); //pm ornox ;)
 
 
+  }
+
+  private void scrapeButtonAction(JTextField replayDirectoryTextField) {
+    Settings.sanitizePath = replayDirectoryTextField.getText();
+    Settings.sanitizeOutputPath = new File(Settings.sanitizePath, "../output").toString();
+    if (replayDirectoryTextField.getText().length() > 0) {
+      replayDirectoryTextField.setText("Processing!");
+      if (!Scraper.scraping) {
+        Logger.Info("@|green,intensity_bold Scraping " + Settings.sanitizePath+"|@");
+        Scraper.scrape();
+      } else {
+        Logger.Warn("@|red Already scraping, please wait.|@");
+      }
+    }
+  }
+
+  private void stripButtonAction(JTextField replayDirectoryTextField2) {
+    Settings.sanitizePath = replayDirectoryTextField2.getText();
+    Settings.sanitizeOutputPath = new File(Settings.sanitizePath,"../output").toString();
+    if (replayDirectoryTextField2.getText().length() > 0) {
+      replayDirectoryTextField2.setText("Processing!");
+      if (!Scraper.stripping) {
+        Logger.Info("@|green,intensity_bold Stripping/Optimizing " + Settings.sanitizePath + "|@");
+        Scraper.strip();
+      } else {
+        Logger.Warn("@|red Already stripping/optimizing, please wait.|@");
+      }
+    }
   }
 
 
