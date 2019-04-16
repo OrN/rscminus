@@ -23,6 +23,10 @@ package rscminus.common;
 import java.net.URL;
 
 public class Settings {
+  // rscminus version number
+  public static String versionNumber = "0.0.7";
+
+  // Logger Settings
   public static int LOG_VERBOSITY = 10;
   public static boolean COLORIZE_CONSOLE_TEXT = true;
   public static boolean LOG_FORCE_LEVEL = true;
@@ -30,6 +34,19 @@ public class Settings {
   public static boolean LOG_FORCE_TIMESTAMPS = true;
   public static boolean LOG_SHOW_TIMESTAMPS = true;
 
+  // Stripper Settings
+  public static String sanitizePath = "replays";
+  public static String sanitizeOutputPath = "sanitized";
+  public static boolean sanitizePublicChat = false;
+  public static boolean sanitizePrivateChat = false;
+  public static boolean sanitizeFriendsIgnore = false;
+
+  // Scraper Settings
+  public static boolean dumpObjects = true;
+  public static boolean dumpWallObjects = true;
+
+
+  // Utils that probably don't belong in settings, but are in Settings.java in RSC+
   public static class Dir {
 
     public static String JAR;

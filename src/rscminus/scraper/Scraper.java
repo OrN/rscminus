@@ -26,6 +26,7 @@ import rscminus.game.PacketBuilder;
 import rscminus.game.constants.Game;
 import rscminus.game.world.ViewRegion;
 
+import java.awt.*;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,6 +34,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import static rscminus.common.Settings.initDir;
+import static rscminus.common.Settings.sanitizeOutputPath;
+import static rscminus.common.Settings.sanitizePath;
 
 public class Scraper {
     private static HashMap<Integer, Integer> m_objects = new HashMap<Integer, Integer>();
@@ -40,12 +43,9 @@ public class Scraper {
 
     private static final int OBJECT_BLANK = 65536;
 
-    // Settings
-    private static String sanitizePath = "replays";
-    private static String sanitizeOutputPath = "sanitized";
-    private static boolean sanitizePublicChat = true;
-    private static boolean sanitizePrivateChat = true;
-    private static boolean sanitizeFriendsIgnore = true;
+    private static StripperWindow stripperWindow;
+    public static boolean scraping = false;
+    public static boolean stripping = false;
 
     private static boolean objectIDBlacklisted(int id, int x, int y) {
         boolean blacklist = false;
@@ -306,7 +306,7 @@ public class Scraper {
                             packet.readRSCString();
 
                             // Strip Chat
-                            if (sanitizePublicChat) {
+                            if (Settings.sanitizePublicChat) {
                                 int trimSize = packet.tell() - startPosition;
                                 packet.skip(-trimSize);
                                 packet.trim(trimSize);
@@ -350,12 +350,12 @@ public class Scraper {
                 case PacketBuilder.OPCODE_SET_IGNORE:
                 case PacketBuilder.OPCODE_UPDATE_IGNORE:
                 case PacketBuilder.OPCODE_UPDATE_FRIEND:
-                    if (sanitizeFriendsIgnore)
+                    if (Settings.sanitizeFriendsIgnore)
                         packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                     break;
                 case PacketBuilder.OPCODE_RECV_PM:
                 case PacketBuilder.OPCODE_SEND_PM:
-                    if (sanitizePrivateChat)
+                    if (Settings.sanitizePrivateChat)
                         packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                     break;
                 default:
@@ -368,18 +368,18 @@ public class Scraper {
         for (ReplayPacket packet : outgoingPackets) {
             switch (packet.opcode) {
                 case 216: // Send chat message
-                    if (sanitizePublicChat)
+                    if (Settings.sanitizePublicChat)
                         packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                     break;
                 case 218: // Send private message
-                    if (sanitizePrivateChat)
+                    if (Settings.sanitizePrivateChat)
                         packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                     break;
                 case 167: // Remove friend
                 case 195: // Add friend
                 case 241: // Remove ignore
                 case 132: // Add ignore
-                    if (sanitizeFriendsIgnore)
+                    if (Settings.sanitizeFriendsIgnore)
                         packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                     break;
                 default:
@@ -585,27 +585,60 @@ public class Scraper {
     public static void main(String args[]) {
         initDir();
         Logger.Debug("Dir.JAR: " + Settings.Dir.JAR);
-
-        Logger.Info("cool shit my dude");
-
-        /*
-        sanitizePath = new File(sanitizePath).toPath().toAbsolutePath().toString();
-        sanitizeOutputPath = new File(sanitizeOutputPath).toPath().toAbsolutePath().toString();
-        FileUtil.mkdir(sanitizePath);
-        FileUtil.mkdir(sanitizeOutputPath);
-
-        // Set sanitize settings and begin sanitizing
-        sanitizePublicChat = true;
-        sanitizePrivateChat = true;
-        sanitizeFriendsIgnore = true;
-        sanitizeDirectory(sanitizePath);
-        */
-
-        // Scrape directory
-        //scrapeDirectory(sanitizePath);
-        //dumpObjects(sanitizeOutputPath + "/objects.bin");
-        //dumpWallObjects(sanitizeOutputPath + "/wallobjects.bin");
+        setStripperWindow(new StripperWindow());
+        stripperWindow.showStripperWindow();
 
         return;
     }
+
+    public static void scrape() {
+        scraping = true;
+        // Scrape directory
+        if (Settings.dumpObjects || Settings.dumpWallObjects) {
+            File replay = new File(sanitizePath + "/in.bin.gz");
+            if (replay.exists())
+                scrapeReplay(sanitizePath);
+            else
+                scrapeDirectory(sanitizePath);
+        } else {
+            Logger.Warn("You attempted to scrape nothing. Make sure to select something to scrape.");
+        }
+        if (Settings.dumpObjects) {
+            dumpObjects(Settings.Dir.JAR + "/objects.bin");
+        }
+        if (Settings.dumpWallObjects) {
+            dumpWallObjects(Settings.Dir.JAR + "/wallobjects.bin");
+        }
+        Logger.Info("Finished Scraping!");
+        scraping = false;
+    }
+
+    public static void strip() {
+        stripping = true;
+        sanitizePath = new File(sanitizePath).toPath().toAbsolutePath().toString();
+        sanitizeOutputPath = Settings.Dir.JAR + "/strippedReplays";
+        Logger.Info("Saving to " + sanitizeOutputPath);
+        FileUtil.mkdir(sanitizePath);
+
+        File replay = new File(sanitizePath + "/in.bin.gz");
+        if (replay.exists()) {
+            sanitizeOutputPath += "/" + new File(sanitizePath).getName();
+            FileUtil.mkdir(sanitizeOutputPath);
+            sanitizeReplay(sanitizePath);
+        } else {
+            FileUtil.mkdir(sanitizeOutputPath);
+            sanitizeDirectory(sanitizePath);
+        }
+        Logger.Info("Finished Stripping/Optimizing!");
+        stripping = false;
+    }
+
+    /** @return the window */
+    public static StripperWindow getStripperWindow() {
+        return stripperWindow;
+    }
+
+    /** @param window the window to set */
+    public static void setStripperWindow(StripperWindow window) {stripperWindow = window;}
+
 }
