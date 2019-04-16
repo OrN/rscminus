@@ -170,7 +170,7 @@ public class StripperWindow {
     tabbedPane.setFont(new Font("", Font.PLAIN,16));
     tabbedPane.addTab("About", null, aboutScrollPane, null);
     tabbedPane.addTab("Scrape", null, scrapeScrollPane, null);
-    tabbedPane.addTab("Strip", null, stripScrollPane, null);
+    tabbedPane.addTab("Strip/Optimize", null, stripScrollPane, null);
 
     // TODO: maybe add some way to donate in the gui
     // TODO: possibly user configurable in settings if this tab gets added or not, on by default
@@ -308,7 +308,7 @@ public class StripperWindow {
             }
     );
 
-    JLabel explainWhatTheTextBoxIsFor = new JLabel("Paste the top directory for the replay(s) you want to scrape:");
+    JLabel explainWhatTheTextBoxIsFor = new JLabel("Paste the top directory for the replay(s) you want to scrape: (CTRL-V)");
     scrapePanelCheckboxesPanel.add(explainWhatTheTextBoxIsFor);
 
     JPanel aJPanelForOnlyOneComponentFuckJPanel = new JPanel();
@@ -382,7 +382,7 @@ public class StripperWindow {
             }
     );
 
-    explainWhatTheTextBoxIsFor = new JLabel("Paste the top directory for the replay(s) you want to optimize or strip data from:");
+    explainWhatTheTextBoxIsFor = new JLabel("Paste the top directory for the replay(s) you want to optimize or strip data from: (CTRL-V)");
     stripPanelCheckboxesPanel.add(explainWhatTheTextBoxIsFor);
 
     JPanel aJPanelForOnlyOneComponentFuckJPanel2 = new JPanel();
