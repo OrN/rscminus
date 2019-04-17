@@ -614,6 +614,7 @@ public class Scraper {
         if (Settings.dumpWallObjects) {
             dumpWallObjects(Settings.Dir.JAR + "/wallobjects.bin");
         }
+        Logger.Info("Saved to " + Settings.Dir.JAR);
         Logger.Info("@|green,intensity_bold Finished Scraping!|@");
         scraping = false;
     }
@@ -643,6 +644,7 @@ public class Scraper {
             Logger.Info("Saving to " + sanitizeOutputPath);
             sanitizeDirectory(sanitizePath);
         }
+        Logger.Info("Saved to " + sanitizeOutputPath);
         Logger.Info("@|green,intensity_bold Finished Stripping/Optimizing!|@");
         stripping = false;
     }
