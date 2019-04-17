@@ -419,6 +419,7 @@ public class StripperWindow {
       if (!Scraper.scraping) {
         Logger.Info("@|green,intensity_bold Scraping " + Settings.sanitizePath+"|@");
         Scraper.scrape();
+        replayDirectoryTextField.setText("Finished!");
       } else {
         Logger.Warn("@|red Already scraping, please wait.|@");
       }
@@ -433,6 +434,7 @@ public class StripperWindow {
       if (!Scraper.stripping) {
         Logger.Info("@|green,intensity_bold Stripping/Optimizing " + Settings.sanitizePath + "|@");
         Scraper.strip();
+        replayDirectoryTextField2.setText("Finished!");
       } else {
         Logger.Warn("@|red Already stripping/optimizing, please wait.|@");
       }

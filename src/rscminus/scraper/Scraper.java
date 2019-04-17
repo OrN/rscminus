@@ -290,6 +290,7 @@ public class Scraper {
         // Process incoming packets
         LinkedList<ReplayPacket> incomingPackets = editor.getIncomingPackets();
         for (ReplayPacket packet : incomingPackets) {
+            Logger.Debug(String.format("incoming opcode: %d",packet.opcode));
             switch (packet.opcode) {
                 case PacketBuilder.OPCODE_UPDATE_PLAYERS:
                 {
@@ -366,6 +367,7 @@ public class Scraper {
         // Process outgoing packets
         LinkedList<ReplayPacket> outgoingPackets = editor.getOutgoingPackets();
         for (ReplayPacket packet : outgoingPackets) {
+            Logger.Debug(String.format("outgoing opcode: %d",packet.opcode));
             switch (packet.opcode) {
                 case 216: // Send chat message
                     if (Settings.sanitizePublicChat)
@@ -386,9 +388,9 @@ public class Scraper {
                     break;
             }
         }
-
-        String outDir = fname.replaceFirst(sanitizePath, sanitizeOutputPath);
+        String outDir = fname.replace(new File(sanitizePath).getAbsolutePath(), new File(sanitizeOutputPath).getAbsolutePath());
         outDir = new File(outDir).toPath().toAbsolutePath().toString();
+        Logger.Debug("@|green,intensity_bold finished processing, outdir: |@" + outDir);
         FileUtil.mkdir(outDir);
         editor.exportData(outDir,fname);
     }
@@ -617,8 +619,9 @@ public class Scraper {
     }
 
     public static void strip() {
-        if (new File(sanitizePath).getName().equals("Processing!")) {
-            Logger.Warn("@|red Cannot strip from folder named \"Processing!\".|@");
+        String filename = new File(sanitizePath).getName();
+        if (filename.equals("Processing!") || filename.equals("Finished!")) {
+            Logger.Warn("@|red Invalid folder asked to be stripped.|@");
             Logger.Info("@|red Hit CTRL-V to paste into the text field.|@");
             return;
         }
@@ -627,16 +630,17 @@ public class Scraper {
         sanitizePath = new File(sanitizePath).toPath().toAbsolutePath().toString();
         sanitizeOutputPath = Settings.Dir.JAR + "/strippedReplays";
 
-        Logger.Info("Saving to " + sanitizeOutputPath);
         FileUtil.mkdir(sanitizePath);
 
         File replay = new File(sanitizePath + "/in.bin.gz");
         if (replay.exists()) {
             sanitizeOutputPath += "/" + new File(sanitizePath).getName();
             FileUtil.mkdir(sanitizeOutputPath);
+            Logger.Info("Saving to " + sanitizeOutputPath);
             sanitizeReplay(sanitizePath);
         } else {
             FileUtil.mkdir(sanitizeOutputPath);
+            Logger.Info("Saving to " + sanitizeOutputPath);
             sanitizeDirectory(sanitizePath);
         }
         Logger.Info("@|green,intensity_bold Finished Stripping/Optimizing!|@");
