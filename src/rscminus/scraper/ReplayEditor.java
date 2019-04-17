@@ -99,7 +99,7 @@ public class ReplayEditor {
             while ((replayPacket = outgoingReader.readPacket(true, disconnectTimestamps)) != null)
                 m_outgoingPackets.add(replayPacket);
         } catch (Exception e) {
-            Logger.Warn(e.getMessage() + " in ReplayEditor.importData");
+            Logger.Warn(e.getMessage() + " in ReplayEditor.importData. (This usually is because the replay is unplayable/broken)");
         }
 
         return true;
