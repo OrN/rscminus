@@ -55,6 +55,8 @@ public class ReplayEditor {
     public static final int VIRTUAL_OPCODE_CONNECT = 10000;
     public static final int VIRTUAL_OPCODE_NOP = 10001;
 
+    public static int ip_address = 0;
+
     public byte[] getMetadata() {
         return m_metadata;
     }
@@ -124,10 +126,23 @@ public class ReplayEditor {
                 DataInputStream metadata = new DataInputStream(new FileInputStream(metadataFile));
                 m_replayMetadata.replayLength = metadata.readInt();
                 m_replayMetadata.dateModified = metadata.readLong();
+                if (metadataFile.length() >= 13) {
+                    m_replayMetadata.IPAddress = metadata.readInt();
+                    m_replayMetadata.conversionSettings = metadata.readByte();
+                    m_replayMetadata.conversionSettings |= m_metadata[METADATA_FLAGS_OFFSET];
+                    m_replayMetadata.userField = metadata.readInt();
+                } else { //convert to metadata.bin v2
+                    m_replayMetadata.IPAddress = ip_address;
+                    m_replayMetadata.conversionSettings = m_metadata[METADATA_FLAGS_OFFSET];
+                    m_replayMetadata.userField = 0;
+                }
                 metadata.close();
             } else {
                 m_replayMetadata.replayLength = 0;
                 m_replayMetadata.dateModified = new Date().getTime();
+                m_replayMetadata.IPAddress = ip_address;
+                m_replayMetadata.conversionSettings = m_metadata[METADATA_FLAGS_OFFSET]
+                m_replayMetadata.userField = 0;
             }
         } catch (Exception e) {
         }
@@ -371,6 +386,9 @@ public class ReplayEditor {
             DataOutputStream metadata = new DataOutputStream(new FileOutputStream(metadataFile));
             metadata.writeInt(m_replayMetadata.replayLength);
             metadata.writeLong(m_replayMetadata.dateModified);
+            metadata.writeInt(m_replayMetadata.IPAddress);
+            metadata.writeByte(m_replayMetadata.conversionSettings);
+            metadata.writeInt(m_replayMetadata.userField);
             metadata.close();
         } catch (Exception e) {
             e.printStackTrace();
