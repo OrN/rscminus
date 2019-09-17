@@ -21,15 +21,20 @@ package rscminus.scraper;
 
 import rscminus.common.FileUtil;
 import rscminus.common.Sleep;
+import rscminus.common.Logger;
+import rscminus.common.Settings;
 import rscminus.game.PacketBuilder;
 import rscminus.game.constants.Game;
 import rscminus.game.world.ViewRegion;
 
+import java.awt.*;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
+
+import static rscminus.common.Settings.initDir;
 
 public class Scraper {
     private static HashMap<Integer, Integer> m_objects = new HashMap<Integer, Integer>();
@@ -38,14 +43,12 @@ public class Scraper {
     private static final int OBJECT_BLANK = 65536;
 
     // Settings
-    private static String sanitizePath = "replays";
-    private static String sanitizeOutputPath = "output";
     private static int sanitizeVersion = -1;
-    private static boolean sanitizeForce = false;
-    private static boolean sanitizeReplays = false;
-    private static boolean sanitizePublicChat = false;
-    private static boolean sanitizePrivateChat = false;
-    private static boolean sanitizeFriendsIgnore = false;
+
+    private static StripperWindow stripperWindow;
+
+    public static boolean scraping = false;
+    public static boolean stripping = false;
 
     private static boolean objectIDBlacklisted(int id, int x, int y) {
         boolean blacklist = false;
@@ -210,7 +213,7 @@ public class Scraper {
                 }
             }
             out.close();
-            System.out.println("Dumped " + objectCount + " objects");
+            Logger.Info("Dumped " + objectCount + " objects");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -232,7 +235,7 @@ public class Scraper {
                 out.writeByte(direction);
             }
             out.close();
-            System.out.println("Dumped " + count + " wall objects");
+            Logger.Info("Dumped " + count + " wall objects");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -283,44 +286,44 @@ public class Scraper {
 
     private static void setFlags(ReplayEditor editor) {
         byte[] metadata = editor.getMetadata();
-        if (sanitizePublicChat)
+        if (Settings.sanitizePublicChat)
             metadata[ReplayEditor.METADATA_FLAGS_OFFSET] |= ReplayEditor.FLAG_SANITIZE_PUBLIC;
-        if (sanitizePrivateChat)
+        if (Settings.sanitizePrivateChat)
             metadata[ReplayEditor.METADATA_FLAGS_OFFSET] |= ReplayEditor.FLAG_SANITIZE_PRIVATE;
-        if (sanitizeFriendsIgnore)
+        if (Settings.sanitizeFriendsIgnore)
             metadata[ReplayEditor.METADATA_FLAGS_OFFSET] |= ReplayEditor.FLAG_SANITIZE_FRIENDSIGNORES;
         if (sanitizeVersion != -1 && editor.getReplayVersion().version != sanitizeVersion)
             metadata[ReplayEditor.METADATA_FLAGS_OFFSET] |= ReplayEditor.FLAG_SANITIZE_VERSION;
     }
 
     private static void sanitizeReplay(String fname) {
-        System.out.println(fname);
-
         ReplayEditor editor = new ReplayEditor();
         boolean success = editor.importData(fname);
 
         if (!success) {
-            System.out.println("Replay is not valid, skipping");
+            Logger.Warn("Replay is not valid, skipping");
             return;
         }
 
-        if (!sanitizeForce && !editor.authenticReplay()) {
-            System.out.println("Replay is not an authentic rsc replay");
+        if (!Settings.sanitizeForce && !editor.authenticReplay()) {
+            Logger.Warn("Replay is not an authentic rsc replay");
             return;
         }
 
-        System.out.println("client version: " + editor.getReplayVersion().clientVersion);
-        System.out.println("replay version: " + editor.getReplayVersion().version);
+        Logger.Info("client version: " + editor.getReplayVersion().clientVersion);
+        Logger.Info("replay version: " + editor.getReplayVersion().version);
 
         setFlags(editor);
+        Logger.Debug(fname);
 
         // Process incoming packets
         LinkedList<ReplayPacket> incomingPackets = editor.getIncomingPackets();
         for (ReplayPacket packet : incomingPackets) {
+            Logger.Debug(String.format("incoming opcode: %d",packet.opcode));
             try {
                 switch (packet.opcode) {
                     case ReplayEditor.VIRTUAL_OPCODE_CONNECT:
-                        System.out.println("loginresponse: " + packet.data[0] + " (timestamp: " + packet.timestamp + ")");
+                        Logger.Info("loginresponse: " + packet.data[0] + " (timestamp: " + packet.timestamp + ")");
                         break;
                     case PacketBuilder.OPCODE_UPDATE_PLAYERS: {
                         int originalPlayerCount = packet.readUnsignedShort();
@@ -336,7 +339,7 @@ public class Scraper {
                                 packet.readRSCString();
 
                                 // Strip Chat
-                                if (sanitizePublicChat) {
+                                if (Settings.sanitizePublicChat) {
                                     int trimSize = packet.tell() - startPosition;
                                     packet.skip(-trimSize);
                                     packet.trim(trimSize);
@@ -380,12 +383,12 @@ public class Scraper {
                     case PacketBuilder.OPCODE_SET_IGNORE:
                     case PacketBuilder.OPCODE_UPDATE_IGNORE:
                     case PacketBuilder.OPCODE_UPDATE_FRIEND:
-                        if (sanitizeFriendsIgnore)
+                        if (Settings.sanitizeFriendsIgnore)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                         break;
                     case PacketBuilder.OPCODE_RECV_PM:
                     case PacketBuilder.OPCODE_SEND_PM:
-                        if (sanitizePrivateChat)
+                        if (Settings.sanitizePrivateChat)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                         break;
                     default:
@@ -399,24 +402,25 @@ public class Scraper {
         // Process outgoing packets
         LinkedList<ReplayPacket> outgoingPackets = editor.getOutgoingPackets();
         for (ReplayPacket packet : outgoingPackets) {
+            Logger.Debug(String.format("outgoing opcode: %d",packet.opcode));
             try {
                 switch (packet.opcode) {
                     case ReplayEditor.VIRTUAL_OPCODE_CONNECT: // Login
-                        System.out.println("outgoing login (timestamp: " + packet.timestamp + ")");
+                        Logger.Info("outgoing login (timestamp: " + packet.timestamp + ")");
                         break;
                     case 216: // Send chat message
-                        if (sanitizePublicChat)
+                        if (Settings.sanitizePublicChat)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                         break;
                     case 218: // Send private message
-                        if (sanitizePrivateChat)
+                        if (Settings.sanitizePrivateChat)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                         break;
                     case 167: // Remove friend
                     case 195: // Add friend
                     case 241: // Remove ignore
                     case 132: // Add ignore
-                        if (sanitizeFriendsIgnore)
+                        if (Settings.sanitizeFriendsIgnore)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                         break;
                     default:
@@ -427,14 +431,14 @@ public class Scraper {
             }
         }
 
-        if (sanitizeReplays) {
+        if (Settings.sanitizeReplays) {
             // Set exported replay version
             if (sanitizeVersion != -1)
                 editor.getReplayVersion().version = sanitizeVersion;
-            String outDir = sanitizeOutputPath + fname.substring(sanitizePath.length());
+            String outDir = Settings.sanitizeOutputPath + fname.substring(Settings.sanitizePath.length());
             outDir = new File(outDir).toPath().toAbsolutePath().toString();
             FileUtil.mkdir(outDir);
-            editor.exportData(outDir);
+            editor.exportData(outDir, Settings.sanitizePath);
             editor.exportPCAP(outDir);
         }
     }
@@ -605,10 +609,13 @@ public class Scraper {
             if (f.isDirectory()) {
                 String replayDirectory = f.getAbsolutePath();
                 File replay = new File(replayDirectory + "/in.bin.gz");
-                if (replay.exists())
+                if (replay.exists()) {
+                    Logger.Info("@|cyan Started sanitizing |@" + replayDirectory);
                     sanitizeReplay(replayDirectory);
-                else
+                    Logger.Info("@|cyan,intensity_bold Finished sanitizing |@" + replayDirectory);
+                } else {
                     sanitizeDirectory(replayDirectory);
+                }
             }
         }
     }
@@ -644,22 +651,20 @@ public class Scraper {
     private static boolean parseArguments(String args[]) {
         for (String arg : args) {
             switch(arg.toLowerCase().substring(0, 2)) {
-                case "-h":
-                    return false;
-                case "-z":
-                    sanitizeForce = true;
-                    break;
-                case "-s":
-                    sanitizeReplays = true;
-                    break;
-                case "-p":
-                    sanitizePublicChat = true;
-                    break;
-                case "-x":
-                    sanitizePrivateChat = true;
+                case "-d":
+                    Settings.dumpObjects = true;
+                    Settings.dumpWallObjects = true;
                     break;
                 case "-f":
-                    sanitizeFriendsIgnore = true;
+                    Settings.sanitizeFriendsIgnore = true;
+                    break;
+                case "-h":
+                    return false;
+                case "-p":
+                    Settings.sanitizePublicChat = true;
+                    break;
+                case "-s":
+                    Settings.sanitizeReplays = true;
                     break;
                 case "-v":
                     try {
@@ -671,38 +676,113 @@ public class Scraper {
                         return false;
                     }
                     break;
+                case "-x":
+                    Settings.sanitizePrivateChat = true;
+                    break;
+                case "-z":
+                    Settings.sanitizeForce = true;
+                    break;
                 default:
                     // Invalid argument
                     if (arg.charAt(0) == '-')
                         return false;
-                    sanitizePath = arg;
-                    break;
+                    Settings.sanitizePath = arg;
+                    return true;
             }
         }
-        return true;
+        return false;
     }
-
-    public static void main(String args[]) {
-        boolean success = parseArguments(args);
-        if (!success) {
-            printHelp(args);
+    
+    public static void scrape() {
+        scraping = true;
+        Settings.scraperOutputPath = Settings.Dir.JAR + "/dump/";
+        // Scrape directory
+        if (Settings.dumpObjects || Settings.dumpWallObjects) {
+            FileUtil.mkdir(Settings.scraperOutputPath);
+            File replay = new File(Settings.sanitizePath + "/in.bin.gz");
+            if (replay.exists())
+                scrapeReplay(Settings.sanitizePath);
+            else
+                scrapeDirectory(Settings.sanitizePath);
+        } else {
+            Logger.Warn("@|red You attempted to scrape nothing. Make sure to select something to scrape.|@");
+        }
+        if (Settings.dumpObjects) {
+            dumpObjects(Settings.scraperOutputPath + "objects.bin");
+        }
+        if (Settings.dumpWallObjects) {
+            dumpWallObjects(Settings.scraperOutputPath + "wallobjects.bin");
+        }
+        Logger.Info("Saved to " + Settings.scraperOutputPath);
+        Logger.Info("@|green,intensity_bold Finished Scraping!|@");
+        scraping = false;
+    }
+    
+    public static void strip() {
+        Logger.Info("Stripping " + Settings.sanitizePath);
+        String filename = new File(Settings.sanitizePath).getName();
+        if (filename.equals("Processing!") || filename.equals("Finished!")) {
+            Logger.Warn("@|red Invalid folder asked to be stripped.|@");
+            Logger.Info("@|red Hit CTRL-V to paste into the text field.|@");
             return;
         }
 
-        sanitizePath = new File(sanitizePath).toPath().toAbsolutePath().toString();
-        sanitizeOutputPath = new File(sanitizeOutputPath).toPath().toAbsolutePath().toString();
-        FileUtil.mkdir(sanitizePath);
-        FileUtil.mkdir(sanitizeOutputPath);
+        stripping = true;
+        Settings.sanitizePath = new File(Settings.sanitizePath).toPath().toAbsolutePath().toString();
+        Settings.sanitizeOutputPath = Settings.Dir.JAR + "/strippedReplays";
 
-        // Begin sanitizing
-        sanitizeDirectory(sanitizePath);
+        FileUtil.mkdir(Settings.sanitizePath);
 
-        // Scrape directory
-        // TODO: Combine this with our sanitizer
-        scrapeDirectory(sanitizePath);
-        dumpObjects(sanitizeOutputPath + "/objects.bin");
-        dumpWallObjects(sanitizeOutputPath + "/wallobjects.bin");
+        Settings.sanitizeOutputPath = Settings.sanitizeOutputPath + "/" + new File(Settings.sanitizePath).getName();
+        FileUtil.mkdir(Settings.sanitizeOutputPath);
+        Logger.Info("Saving to " + Settings.sanitizeOutputPath);
 
-        return;
+        File replay = new File(Settings.sanitizePath + "/in.bin.gz");
+        if (replay.exists()) {
+            sanitizeReplay(Settings.sanitizePath);
+        } else {
+            sanitizeDirectory(Settings.sanitizePath);
+        }
+        Logger.Info("Saved to " + Settings.sanitizeOutputPath);
+        Logger.Info("@|green,intensity_bold Finished Stripping/Optimizing!|@");
+        stripping = false;
     }
+
+    public static void main(String args[]) {
+        initDir();
+        Logger.Info("Dir.JAR: " + Settings.Dir.JAR);
+
+        if (!parseArguments(args)) {
+            // print help on how to use command line
+            printHelp(args);
+
+          // then initialize and show the gui
+            try {
+                setStripperWindow(new StripperWindow());
+                stripperWindow.showStripperWindow();
+            } catch (Exception e) {
+            }
+
+            return;
+        } else { // command line arguments specified, don't create gui
+            // TODO: Combine dumper with sanitizer
+            if (Settings.dumpObjects || Settings.dumpWallObjects) {
+                scrape();
+            }
+            if (Settings.sanitizeReplays) {
+                strip();
+            }
+            return;
+        }
+    }
+
+    /** @return the window */
+    public static StripperWindow getStripperWindow() {
+        return stripperWindow;
+    }
+
+
+    /** @param window the window to set */
+    public static void setStripperWindow(StripperWindow window) {stripperWindow = window;}
+
 }

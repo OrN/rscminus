@@ -22,6 +22,8 @@ package rscminus.scraper;
 import rscminus.common.FileUtil;
 import rscminus.common.ISAACCipher;
 import rscminus.common.Sleep;
+import rscminus.common.Logger;
+import rscminus.common.Settings;
 import rscminus.scraper.client.Class11;
 
 import java.io.*;
@@ -141,7 +143,7 @@ public class ReplayEditor {
                 m_replayMetadata.replayLength = 0;
                 m_replayMetadata.dateModified = new Date().getTime();
                 m_replayMetadata.IPAddress = ip_address;
-                m_replayMetadata.conversionSettings = m_metadata[METADATA_FLAGS_OFFSET]
+                m_replayMetadata.conversionSettings = m_metadata[METADATA_FLAGS_OFFSET];
                 m_replayMetadata.userField = 0;
             }
         } catch (Exception e) {
@@ -183,6 +185,7 @@ public class ReplayEditor {
             //FileUtil.writeFull("output/in.raw", incomingReader.getData());
         } catch (Exception e) {
             e.printStackTrace();
+            Logger.Warn(e.getMessage() + " in ReplayEditor.importData. (This usually is because the replay is unplayable/broken)");
         }
 
         try {
@@ -223,7 +226,7 @@ public class ReplayEditor {
         return true;
     }
 
-    public void exportData(String fname) {
+    public void exportData(String fname, String originalDir) {
         // Required files
         File keysFile = new File(fname + "/keys.bin");
         File versionFile = new File(fname + "/version.bin");
@@ -390,6 +393,28 @@ public class ReplayEditor {
             metadata.writeByte(m_replayMetadata.conversionSettings);
             metadata.writeInt(m_replayMetadata.userField);
             metadata.close();
+            
+            //only copy keyboard.bin if no privacy things were checked
+            //TODO: we could possibly search the sanitized text and remove it
+            //      from keyboard.bin.gz, if keyboard.bin.gz were more useful
+            //      Would have to handle backspace though.
+
+            if (!Settings.sanitizeFriendsIgnore &&
+                !Settings.sanitizePublicChat &&
+                !Settings.sanitizePrivateChat
+            ) {
+                File keyboardFile = new File(originalDir + "/keyboard.bin.gz");
+                if (keyboardFile.exists()) {
+                    FileUtil.copyFile(keyboardFile,new File(fname + "/keyboard.bin.gz"));
+                }
+            }
+
+            //copy mouse.bin without editing b/c nothing bad can be in it
+            File mouseFile = new File(originalDir + "/mouse.bin.gz");
+            if (mouseFile.exists()) {
+                FileUtil.copyFile(mouseFile,new File(fname + "/mouse.bin.gz"));
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
