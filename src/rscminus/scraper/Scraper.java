@@ -44,11 +44,15 @@ public class Scraper {
 
     // Settings
     private static int sanitizeVersion = -1;
+    public static int ip_address = -1;
+    public static int world_num_excluded = 0;
 
     private static StripperWindow stripperWindow;
 
     public static boolean scraping = false;
     public static boolean stripping = false;
+    public static int ipFoundCount = 0;
+    public static int replaysProcessedCount = 0;
 
     private static boolean objectIDBlacklisted(int id, int x, int y) {
         boolean blacklist = false;
@@ -298,6 +302,7 @@ public class Scraper {
 
     private static void sanitizeReplay(String fname) {
         ReplayEditor editor = new ReplayEditor();
+        setFlags(editor);
         boolean success = editor.importData(fname);
 
         if (!success) {
@@ -313,7 +318,6 @@ public class Scraper {
         Logger.Info("client version: " + editor.getReplayVersion().clientVersion);
         Logger.Info("replay version: " + editor.getReplayVersion().version);
 
-        setFlags(editor);
         Logger.Debug(fname);
 
         // Process incoming packets
@@ -382,20 +386,50 @@ public class Scraper {
                     }
                     case PacketBuilder.OPCODE_SET_IGNORE:
                     case PacketBuilder.OPCODE_UPDATE_IGNORE:
+                        if (Settings.sanitizeFriendsIgnore)
+                            packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
+                        break;
                     case PacketBuilder.OPCODE_UPDATE_FRIEND:
                         if (Settings.sanitizeFriendsIgnore)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
+                        try {
+                            packet.readPaddedString(); //Friend's name
+                            packet.readPaddedString(); //Friend's old name
+                            int onlineStatus = packet.readByte();
+                            if (onlineStatus > 1) { //the friend is online, offline can be 0 or 1 see fsnom2@aol.com2/08-03-2018 14.14.44 for 1
+                                String world = packet.readPaddedString();
+                                if (world.contains("Classic")) {
+                                    if (onlineStatus == 6) { // same world
+                                        int worldNum = Integer.parseInt(world.substring(world.length() - 1));
+                                        Scraper.ip_address = worldNum;
+                                    } else {
+                                        int worldNumExcluded = Integer.parseInt(world.substring(world.length() - 1));
+                                        if (worldNumExcluded <= 5) {
+                                            Scraper.world_num_excluded |= (int)Math.pow(2,worldNumExcluded - 1); //1914
+                                        } else {
+                                            editor.foundInauthentic = true;
+                                            Logger.Warn("Inauthentic amount of worlds");
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Logger.Error(String.format("error parsing opcode_update_friend, packet.timestamp: %d", packet.timestamp));
+                        }
                         break;
                     case PacketBuilder.OPCODE_RECV_PM:
                     case PacketBuilder.OPCODE_SEND_PM:
                         if (Settings.sanitizePrivateChat)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                         break;
+
                     default:
                         break;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                Logger.Error("Scraper.sanitizeReplays incomingPackets loop");
             }
         }
 
@@ -428,6 +462,7 @@ public class Scraper {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                Logger.Error("Scraper.sanitizeReplays outgoingPackets loop");
             }
         }
 
@@ -654,17 +689,21 @@ public class Scraper {
                 case "-d":
                     Settings.dumpObjects = true;
                     Settings.dumpWallObjects = true;
+                    Logger.Info("dumping stuff");
                     break;
                 case "-f":
                     Settings.sanitizeFriendsIgnore = true;
+                    Logger.Info("sanitize Friends Ignore set");
                     break;
                 case "-h":
                     return false;
                 case "-p":
                     Settings.sanitizePublicChat = true;
+                    Logger.Info("sanitize Public Chat set");
                     break;
                 case "-s":
                     Settings.sanitizeReplays = true;
+                    Logger.Info("sanitize Replays set");
                     break;
                 case "-v":
                     try {
@@ -678,9 +717,11 @@ public class Scraper {
                     break;
                 case "-x":
                     Settings.sanitizePrivateChat = true;
+                    Logger.Info("sanitize Private Chat set");
                     break;
                 case "-z":
                     Settings.sanitizeForce = true;
+                    Logger.Info("sanitize Force set");
                     break;
                 default:
                     // Invalid argument
@@ -743,9 +784,13 @@ public class Scraper {
         } else {
             sanitizeDirectory(Settings.sanitizePath);
         }
+
+        Logger.Info(String.format("@|green %d out of %d replays were able to have an IP address determined.|@", ipFoundCount, replaysProcessedCount));
         Logger.Info("Saved to " + Settings.sanitizeOutputPath);
         Logger.Info("@|green,intensity_bold Finished Stripping/Optimizing!|@");
         stripping = false;
+        replaysProcessedCount = 0;
+        ipFoundCount = 0;
     }
 
     public static void main(String args[]) {
