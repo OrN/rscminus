@@ -393,19 +393,19 @@ public class Scraper {
                         if (Settings.sanitizeFriendsIgnore)
                             packet.opcode = ReplayEditor.VIRTUAL_OPCODE_NOP;
                         try {
-                            packet.readPaddedString(); //Friend's name
-                            packet.readPaddedString(); //Friend's old name
+                            packet.readPaddedString(); // Friend's name
+                            packet.readPaddedString(); // Friend's old name
                             int onlineStatus = packet.readByte();
-                            if (onlineStatus > 1) { //the friend is online, offline can be 0 or 1 see fsnom2@aol.com2/08-03-2018 14.14.44 for 1
+                            if (onlineStatus > 1) { // the friend is online, offline can be 0 or 1 see fsnom2@aol.com2/08-03-2018 14.14.44 for 1
                                 String world = packet.readPaddedString();
-                                if (world.contains("Classic")) {
+                                if (world.startsWith("Classic")) {
                                     if (onlineStatus == 6) { // same world
                                         int worldNum = Integer.parseInt(world.substring(world.length() - 1));
                                         Scraper.ip_address = worldNum;
                                     } else {
                                         int worldNumExcluded = Integer.parseInt(world.substring(world.length() - 1));
                                         if (worldNumExcluded <= 5) {
-                                            Scraper.world_num_excluded |= (int)Math.pow(2,worldNumExcluded - 1); //1914
+                                            Scraper.world_num_excluded |= (int)Math.pow(2,worldNumExcluded - 1);
                                         } else {
                                             editor.foundInauthentic = true;
                                             Logger.Warn("Inauthentic amount of worlds");

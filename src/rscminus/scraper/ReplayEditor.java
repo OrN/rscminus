@@ -414,60 +414,15 @@ public class ReplayEditor {
             DataOutputStream metadata = new DataOutputStream(new FileOutputStream(metadataFile));
             metadata.writeInt(m_replayMetadata.replayLength);
             metadata.writeLong(m_replayMetadata.dateModified);
-
-            if (Scraper.ip_address == -1) {
-                if (authenticReplay()) {
-                    //World 1: IP address 217.163.53.178
-                    //World 2: IP address 217.163.53.179
-                    //World 3: IP address 217.163.53.180
-                    //World 4: IP address 217.163.53.181
-                    //World 5: IP address 217.163.53.182
-                    Scraper.ip_address = (217 << 24) + (163 << 16) + (53 << 8) + 177;
-
-
-                    int worldsExcluded = 0;
-                    for (int i=0; i < 5; i++) {
-                        worldsExcluded += (Scraper.world_num_excluded >> i) & 0x01;
-                    }
-                    if (worldsExcluded == 4) { //friends on every Classic world but your own, you can tell what world you're on...
-                        Logger.Info(String.format("@|red Using the worldExcluded Method to determine IP Address! worldsExcluded: %d|@",Scraper.world_num_excluded));
-                        int i;
-                        for (i=0; i<=5; i++) {
-                            if (((Scraper.world_num_excluded >> i) & 0x01) == 0) {
-                                break;
-                            }
-                        }
-                        Scraper.ip_address += i + 1;
-                        Scraper.ipFoundCount += 1;
-                    } else {
-                        Scraper.ip_address &= 0xFFFFFF00;
-                    }
-                } else {
-                    Scraper.ip_address = 0;
-                }
-            } else {
-                if (authenticReplay() && Scraper.ip_address > 0 && Scraper.ip_address <=5) {
-                    Scraper.ip_address += (217 << 24) + (163 << 16) + (53 << 8) + 177;
-                    Scraper.ipFoundCount += 1;
-                } else {
-                    Logger.Warn(String.format("authentic replay: %b", authenticReplay()));
-                }
-            }
-            m_replayMetadata.IPAddress = Scraper.ip_address;
-            Logger.Info(String.format("IP Address determined: %d.%d.%d.%d",
-                    (Scraper.ip_address >> 24) & 0xFF,
-                    (Scraper.ip_address >> 16) & 0xFF,
-                    (Scraper.ip_address >> 8) & 0xFF,
-                    (Scraper.ip_address) & 0xFF));
-
+            setIPAddress();
             metadata.writeInt(m_replayMetadata.IPAddress);
             Logger.Info(String.format("conversionSettings: %d",m_replayMetadata.conversionSettings));
             metadata.writeByte(m_replayMetadata.conversionSettings);
             metadata.writeInt(m_replayMetadata.userField);
             metadata.close();
             
-            //only copy keyboard.bin if no privacy things were checked
-            //TODO: we could possibly search the sanitized text and remove it
+            // only copy keyboard.bin if no privacy settings are checked
+            // TODO: we could possibly search the sanitized text and remove it
             //      from keyboard.bin.gz, if keyboard.bin.gz were more useful
             //      Would have to handle backspace though.
 
@@ -481,7 +436,7 @@ public class ReplayEditor {
                 }
             }
 
-            //copy mouse.bin without editing b/c nothing bad can be in it
+            // copy mouse.bin without editing b/c nothing privacy-sensitive can be in it
             File mouseFile = new File(originalDir + "/mouse.bin.gz");
             if (mouseFile.exists()) {
                 FileUtil.copyFile(mouseFile,new File(fname + "/mouse.bin.gz"));
@@ -494,6 +449,56 @@ public class ReplayEditor {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void setIPAddress() {
+        if (Scraper.ip_address == -1) {
+            if (authenticReplay()) {
+                // World 1: IP address 217.163.53.178
+                // World 2: IP address 217.163.53.179
+                // World 3: IP address 217.163.53.180
+                // World 4: IP address 217.163.53.181
+                // World 5: IP address 217.163.53.182
+                Scraper.ip_address = (217 << 24) + (163 << 16) + (53 << 8) + 177;
+
+                int worldsExcluded = 0;
+                for (int i=0; i < 5; i++) {
+                    worldsExcluded += (Scraper.world_num_excluded >> i) & 0x01;
+                }
+                if (worldsExcluded == 4) { // Rare, but friends on every Classic world but your own, you can tell what world you're on.
+                    Logger.Info(String.format("@|red Using the worldExcluded Method to determine IP Address! worldsExcluded: %d|@",Scraper.world_num_excluded));
+                    int i;
+                    for (i = 0; i <= 5; i++) {
+                        if (((Scraper.world_num_excluded >> i) & 0x01) == 0) {
+                            break;
+                        }
+                    }
+                    Scraper.ip_address += i + 1;
+                    Scraper.ipFoundCount += 1;
+                } else {
+                    // Marks the IP as 217.163.53.0
+                    // 217.163.53.0/24 is assigned to Jagex, so it's just a marker that the replay is believed to be on "some" Jagex server.
+                    Scraper.ip_address &= 0xFFFFFF00;
+                }
+            } else {
+                // Non-authentic replay & no IP address imported
+                Scraper.ip_address = 0;
+            }
+        } else {
+            if (authenticReplay() && Scraper.ip_address > 0 && Scraper.ip_address <=5) {
+                Scraper.ip_address += (217 << 24) + (163 << 16) + (53 << 8) + 177;
+                Scraper.ipFoundCount += 1;
+            } else {
+                Logger.Warn(String.format("authentic replay: %b", authenticReplay()));
+            }
+        }
+        m_replayMetadata.IPAddress = Scraper.ip_address;
+        Logger.Info(String.format("IP Address determined: %d.%d.%d.%d",
+                (Scraper.ip_address >> 24) & 0xFF,
+                (Scraper.ip_address >> 16) & 0xFF,
+                (Scraper.ip_address >> 8) & 0xFF,
+                (Scraper.ip_address) & 0xFF));
+
     }
 
     private int getLengthSize(int size) {
