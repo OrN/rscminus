@@ -485,7 +485,7 @@ public class ReplayEditor {
                 Scraper.ip_address = 0;
             }
         } else {
-            if (authenticReplay() && Scraper.ip_address > 0 && Scraper.ip_address <=5) {
+            if (authenticReplay() && Scraper.ip_address > 0 && Scraper.ip_address <= 5) {
                 Scraper.ip_address += (217 << 24) + (163 << 16) + (53 << 8) + 177;
                 Scraper.ipFoundCount += 1;
             } else {
