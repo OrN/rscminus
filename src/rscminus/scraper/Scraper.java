@@ -671,6 +671,7 @@ public class Scraper {
     }
 
     private static void printHelp(String args[]) {
+        System.out.println("\nrscminus v" + Settings.versionNumber+"\n");
         System.out.println("syntax:");
         System.out.println("\t[OPTIONS] [REPLAY DIRECTORY]");
         System.out.println("options:");
