@@ -674,13 +674,14 @@ public class Scraper {
         System.out.println("syntax:");
         System.out.println("\t[OPTIONS] [REPLAY DIRECTORY]");
         System.out.println("options:");
+        System.out.println("\t-d\t\t\tDump objects & other data to binary files");
+        System.out.println("\t-f\t\t\tRemove opcodes related to the friend's list");
         System.out.println("\t-h\t\t\tShow this usage dialog");
-        System.out.println("\t-z\t\t\tProcess replays even if they're not authentic");
-        System.out.println("\t-s\t\t\tExport sanitized replays");
         System.out.println("\t-p\t\t\tSanitize public chat");
+        System.out.println("\t-s\t\t\tExport sanitized replays");
+        System.out.println("\t-v<0-" + ReplayEditor.VERSION + ">\t\t\tSet sanitizer replay version (Default is original replay version)");
         System.out.println("\t-x\t\t\tSanitize private chat");
-        System.out.println("\t-f\t\t\tSanitize friends and ignores");
-        System.out.println("\t-v<0-" + ReplayEditor.VERSION + ">\t\tSet sanitizer replay version (Default is original replay version)");
+        System.out.println("\t-z\t\t\tProcess replays even if they're not authentic");
     }
 
     private static boolean parseArguments(String args[]) {
