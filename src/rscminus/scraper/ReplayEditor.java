@@ -539,11 +539,11 @@ public class ReplayEditor {
         }
 
         int timestampMS = packet.timestamp * 20; // Convert timestamp
-        int timestampSeconds = timestampMS / 1000;
-        int timestampMicro = (timestampMS * 1000) % 1000000;
+        int timestampSeconds = (int)((timestampMS + m_replayMetadata.dateModified) / 1000);
+        long timestampMicro = ((long)timestampMS * 1000) % 1000000;
 
         pcap.writeInt(timestampSeconds); // Timestamp seconds
-        pcap.writeInt(timestampMicro); // Timestamp microseconds
+        pcap.writeInt((int)timestampMicro); // Timestamp microseconds
         pcap.writeInt(size + lengthSize + 19); // Saved length
         pcap.writeInt(size + lengthSize + 19); // Original length
 
