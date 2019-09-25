@@ -221,6 +221,10 @@ public class ReplayReader {
         return true;
     }
 
+    public int disconnectCount() {
+        return m_disconnectOffsets.size();
+    }
+
     private boolean loginBinarySearch() {
         if (m_data.length - m_position < m_inputDisconnectPattern.length)
             return false;

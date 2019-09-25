@@ -215,6 +215,27 @@ public class ReplayEditor {
         }
 
         ReplayPacket replayPacket;
+        int outgoingDisconnects = 0;
+        try {
+            // Import outgoing packets
+            if (outFile.exists()) {
+                ReplayReader outgoingReader = new ReplayReader();
+                boolean success = outgoingReader.open(outFile, m_replayVersion, m_replayMetadata, m_keys, m_outMetadata, m_metadata, m_outChecksum, true);
+                if (!success)
+                    return false;
+
+                while ((replayPacket = outgoingReader.readPacket(false)) != null) {
+                    m_outgoingPackets.add(replayPacket);
+                }
+
+                outgoingDisconnects = outgoingReader.disconnectCount();
+
+                //FileUtil.writeFull("output/out.raw", outgoingReader.getData());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         try {
             // Import incoming packets
             if (inFile.exists()) {
@@ -225,27 +246,16 @@ public class ReplayEditor {
                 while ((replayPacket = incomingReader.readPacket(false)) != null) {
                     m_incomingPackets.add(replayPacket);
                 }
+
+                if (outgoingDisconnects > 0) {
+                    // TODO: Check that all disconnect attempts were detected and react accordingly
+                }
+
                 //FileUtil.writeFull("output/in.raw", incomingReader.getData());
             }
         } catch (Exception e) {
             e.printStackTrace();
             Logger.Warn(e.getMessage() + " in ReplayEditor.importData. (This usually is because the replay is unplayable/broken)");
-        }
-
-        try {
-            // Import outgoing packets
-            if (outFile.exists()) {
-                ReplayReader outgoingReader = new ReplayReader();
-                boolean success = outgoingReader.open(outFile, m_replayVersion, m_replayMetadata, m_keys, m_outMetadata, m_metadata, m_outChecksum, true);
-                if (!success)
-                    return false;
-                while ((replayPacket = outgoingReader.readPacket(false)) != null) {
-                    m_outgoingPackets.add(replayPacket);
-                }
-                //FileUtil.writeFull("output/out.raw", outgoingReader.getData());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         // Skew disconnect timestamps
