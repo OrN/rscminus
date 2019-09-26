@@ -186,6 +186,7 @@ public class ReplayEditor {
         } catch (Exception e) {
         }
 
+        int keyCount = (int) keysFile.length() / 16;
         try {
             // Import version data
             if (versionFile.exists()) {
@@ -199,7 +200,6 @@ public class ReplayEditor {
             }
 
             // Import keys
-            int keyCount = (int) keysFile.length() / 16;
             DataInputStream keys = new DataInputStream(new FileInputStream(keysFile));
             for (int i = 0; i < keyCount; i++) {
                 ReplayKeyPair keyPair = new ReplayKeyPair();
@@ -248,7 +248,11 @@ public class ReplayEditor {
                 }
 
                 if (outgoingDisconnects > 0) {
-                    // TODO: Check that all disconnect attempts were detected and react accordingly
+                    if (keyCount != outgoingDisconnects + 1) {
+                        Logger.Error("Key count doesn't match disconnects detected");
+                    }
+
+                    int incomingDisconnects = incomingReader.disconnectCount();
                 }
 
                 //FileUtil.writeFull("output/in.raw", incomingReader.getData());

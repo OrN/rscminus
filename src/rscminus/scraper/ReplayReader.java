@@ -19,10 +19,7 @@
 
 package rscminus.scraper;
 
-import rscminus.common.FileUtil;
-import rscminus.common.ISAACCipher;
-import rscminus.common.MathUtil;
-import rscminus.common.Sleep;
+import rscminus.common.*;
 import rscminus.game.PacketBuilder;
 
 import java.io.*;
@@ -51,6 +48,7 @@ public class ReplayReader {
     private boolean m_outgoing;
     private boolean m_compressed;
     private int m_position;
+    private int m_skipKeys;
     private LinkedList<ReplayKeyPair> m_keys;
     private int m_keyIndex;
     private ISAACCipher isaac = new ISAACCipher();
@@ -222,7 +220,11 @@ public class ReplayReader {
     }
 
     public int disconnectCount() {
-        return m_disconnectOffsets.size();
+        return m_disconnectOffsets.size() + m_skipKeys;
+    }
+
+    public LinkedList<Integer> disconnectOffsets() {
+        return m_disconnectOffsets;
     }
 
     private boolean loginBinarySearch() {
@@ -344,14 +346,14 @@ public class ReplayReader {
                 } else {
                     // Handle login response
                     int loginResponse = readUnsignedByte();
-                    int skipKeys = 0;
+                    m_skipKeys = 0;
                     if ((loginResponse & 64) != 0) {
                         // Find working key
                         for (;;) {
                             // Set isaac keys
                             m_keyIndex++;
                             if (m_keyIndex >= m_keys.size()) {
-                                System.out.println("ERROR: Replay is trying to use non-existing keys");
+                                Logger.Error("Replay is trying to use non-existing keys");
                                 return null;
                             }
                             isaac.reset();
@@ -360,7 +362,7 @@ public class ReplayReader {
 
                             boolean success = verifyLogin();
                             if (!success)
-                                skipKeys++;
+                                m_skipKeys++;
                             else
                                 break;
                         }
@@ -368,8 +370,8 @@ public class ReplayReader {
                         m_forceQuit = true;
                     }
 
-                    if (skipKeys > 0)
-                        System.out.println("WARNING: Skipping " + skipKeys + " keys");
+                    if (m_skipKeys > 0)
+                        System.out.println("WARNING: Skipping " + m_skipKeys + " keys");
 
                     // Create virtual connect packet
                     replayPacket.opcode = ReplayEditor.VIRTUAL_OPCODE_CONNECT;
